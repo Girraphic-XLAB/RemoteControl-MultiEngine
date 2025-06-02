@@ -1,14 +1,19 @@
-# Unreal RC Web Application Connection Replication
+# Unreal RC Web Interface Replication
 
-By default, Unreal Engine’s Remote Control web application plugin sends Websocket requests to a single IP address. Our company required a single host machine replicating requests to multiple client machines for broadcast.
+The native Unreal Engine’s RC Web Interface plugin sends Websocket requests to a single IP address. The `UnrealEngine.ts` file in this project allows a single host machine to replicate requests to multiple client machines.
 
-To achieve this, the source code for the web application plugin was edited to read a file from the host’s local storage with several IPs delimited by new lines. This list of IPs was used to create additional Websocket connections for each machine intended to be managed by the host.
+The web interface plugin file at `..\UE5.3\Engine\Plugins\VirtualProduction\RemoteControlWebInterface\WebApp\Server\src` can be edited to read a file from the host’s file system [`..\UE5.3\Engine\Plugins\VirtualProduction\RemoteControl\WebInterface\WebApp\ip.txt`] with each IP delimited by new lines. For each IP in the list, a websocket connection is established to the host's web interface.
 
-Changes were also made to the websocket message send function to duplicate the websocket message to the initial host to each client connection. The following pages contain code examples of the before and after for each change.
-
-### Connection Before
-
-```
+<table>
+<tr>
+<th>Before</th>
+<th>After</th>
+</tr>
+<tr>
+<td>
+<pre>
+ 
+```typescript
 function connect() {
  if (connection?.readyState === WebSocket.OPEN || connection?.readyState === WebSocket.CONNECTING)
    return;
@@ -29,9 +34,11 @@ function connect() {
 }
 ```
 
-### Connection After
-```
+</pre>
+</td>
+<td>
 
+```typescript
 function connect() {
  if (connection?.readyState === WebSocket.OPEN || connection?.readyState === WebSocket.CONNECTING)
    return;
@@ -49,7 +56,6 @@ function connect() {
    .on('message', onMessage)
    .on('error', onError)
    .on('close', onClose);
- //Just copy everything below this with the IP you want
  ips.forEach((value, index) => {
    const customAddress = `ws://${value}:${Program.ueWebSocketPort}`;
 
@@ -63,9 +69,23 @@ function connect() {
  });
 }
 ```
-### Send Before
 
-```
+</td>
+</tr>
+</table>
+
+ The websocket message send function was changed to duplicate the message across client connections.
+
+<table>
+<tr>
+<th>Before</th>
+<th>After</th>
+</tr>
+<tr>
+<td>
+<pre>
+ 
+```typescript
 function send(message: string, parameters: any, passphrase?: string, ip?: string) {
  verifyConnection();
  const Id = parameters?.RequestId ?? wsRequest++;
@@ -75,9 +95,11 @@ ip = ip ?? "";
 }
 ```
 
-### Send After
+</pre>
+</td>
+<td>
 
-```
+```typescript
 function send(message: string, parameters: any, passphrase?: string, ip?: string) {
  verifyConnection();
  const Id = parameters?.RequestId ?? wsRequest++;
@@ -92,3 +114,7 @@ ip = ip ?? "";
 
 }
 ```
+
+</td>
+</tr>
+</table>
